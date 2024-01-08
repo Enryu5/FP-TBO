@@ -34,7 +34,43 @@ class CFGParser:
 
         # gunakan fungsi simplify_rules ke unit of production
         # yang dapat menghasilkan satu non terminal
-        self.simplify_rules(["nump", "adjp", "pp", "np", "vp"])
+        self.simplify_rules(["nump", "adjp", "np", "vp"])
+
+        # sederhanakan rule of production pp
+        # agar menghasilkan tepat dua non terminal
+        temp_dict2 = {}
+        counter2 = 1
+        temp_list2 = []
+        for val in self.rules["pp"]:
+            if len(val.split(" ")) > 2:
+                temp = val.split(" ")
+                while len(temp) > 2:
+                    check_str = " ".join(temp[:2])
+                    is_found = False
+                    for k, v in temp_dict2.items():
+                        if check_str == v:
+                            is_found = True
+                            temp.pop(0)
+                            temp.pop(0)
+                            temp.insert(0, k)
+                            break
+                    # buat rule of production baru jika diperlukan
+                    if not is_found:
+                        temp_dict2["p" + str(counter2)] = check_str
+                        temp.pop(0)
+                        temp.pop(0)
+                        temp.insert(0, "p" + str(counter2))
+                        counter2 += 1
+                temp_list2.append(" ".join(temp))
+            else:
+                temp_list2.append(val)
+
+        self.rules["pp"] = temp_list2
+
+        # tambahkan rules hasil penyederhanaan rule of production p
+        for key, value in temp_dict2.items():
+            self.rules[key] = [value]
+
         self.simplify_rules(["s", "p", "o", "pel", "ket"])
 
         # sederhanakan rule of production k
@@ -74,6 +110,8 @@ class CFGParser:
             self.rules[key] = [value]
 
         # dapatkan hasil rules cnf
+        for key, value in enumerate(self.rules.items()):
+            print(value)
         return self.rules
 
     # parsing kalimat menggunakan algoritma cyk
